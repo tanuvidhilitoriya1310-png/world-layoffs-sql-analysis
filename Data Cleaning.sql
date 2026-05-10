@@ -1,27 +1,42 @@
--- Data Cleaning
+/*
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+ DATA CLEANING PROJECT - WORLD LAYOFFS DATASET
+ ---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------- */
 
 SELECT * FROM layoffs;
 
--- 1. Remove Duplicates
--- 2. Standarize the data
--- 3. Null Values or Bank Values 
--- 4. Remove Any Columns or rows
+/* 
+1. Remove Duplicates
+2. Standarize the data
+3. Null Values or Bank Values 
+4. Remove Any Columns or rows */
 
+-- Creating a staging table to preserve raw data
 CREATE TABLE layoff_staging
 LIKE layoffs;
 
 SELECT * FROM layoff_staging;
 
+-- Copying data from raw table into staging table
 INSERT layoff_staging 
 SELECT * FROM layoffs;
 
--- Remove duplicates
+/*
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+1. REMOVE DUPLICATES
+---------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------- */
 
+-- Using ROW_NUMBER() to identify duplicate records
 SELECT *,
 ROW_NUMBER() OVER(PARTITION BY company,location,industry,total_laid_off,percentage_laid_off,`date`,stage,country,funds_raised_millions)
 AS row_num
  FROM layoff_staging;
- 
+
+-- Creating a CTE to filter duplicate rows 
  WITH duplicates_cte AS 
  (SELECT *,
 ROW_NUMBER() OVER(PARTITION BY company,location,industry,total_laid_off,percentage_laid_off,`date`,stage,country,funds_raised_millions)
@@ -48,6 +63,7 @@ AS row_num
  WHERE row_num > 1;
  */
  
+ -- Creating a new staging table with row numbers for duplicate removal
  CREATE TABLE `layoff_staging2` (
   `company` text,
   `location` text,
@@ -81,17 +97,24 @@ select *
 from layoff_staging2
 where company = 'Casper';
 
+-- Deleting duplicate records while keeping the first occurrence
 delete
 from layoff_staging2
 where row_num > 1;
 
--- 2. Standarizing the Data
+/*
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+2. STANDARDIZING THE DATA
+---------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------- */
 
 select  distinct company from layoff_staging2;
 
 select company,trim(company)
 from layoff_staging2;
 
+-- Removing leading and trailing spaces from company names
 UPDATE layoff_staging2
 SET company = trim(company);
 
@@ -103,6 +126,7 @@ SELECT *
 FROM layoff_staging2
 WHERE industry LIKE 'Crypto%';
 
+-- Standardizing different crypto industry labels into a single category
 UPDATE layoff_staging2
 SET industry ='Crypto'
 WHERE industry LIKE 'Crypto%';
@@ -115,12 +139,15 @@ select  distinct country,TRIM(TRAILING '.' FROM country)
 FROM layoff_staging2
 order by 1;
 
+-- Removing unnecessary punctuation from country names
 UPDATE layoff_staging2
 SET country = TRIM(TRAILING '.' FROM country)
 WHERE country LIKE 'United States%';
 
 SELECT `date`,str_to_date(`date`,'%m/%d/%y')
 FROM layoff_staging2;
+
+-- Converting date column from text format to DATE datatype
 UPDATE layoff_staging2
 SET `date` = str_to_date(`date`,'%m/%d/%Y');
 
@@ -129,7 +156,12 @@ select * from layoff_staging2;
 ALTER  TABLE layoff_staging2
 MODIFY COLUMN `date` DATE;
 
--- 3.NULL and Blank values
+/*
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+3.NULL AND BLANK VALUES
+---------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------- */
 
 select * from layoff_staging2
 WHERE total_laid_off is null and 
@@ -145,6 +177,7 @@ WHERE industry='' OR industry  is NULL;
 select * from layoff_staging2
 where company ='Airbnb';
 
+-- Replacing blank industry values with NULL
 update layoff_staging2
 set industry = NULL where industry ='';
 
@@ -155,6 +188,7 @@ on t1.company = t2.company
 where (t1.industry is null or t1.industry ='')
 and t2.industry is not null;
 
+-- Using self join to populate missing industry values based on matching company names
 update layoff_staging2 t1 
 join layoff_staging2 t2
 on t1.company = t2.company
@@ -165,12 +199,20 @@ and t2.industry is not null;
 select * from layoff_staging2
 where company like 'Bally%';
 
--- Remove any columns
+/*
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+4. REMOVE REQUIRED COLUMNS OR ROWS
+---------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------
+*/
 
+-- Removing rows where both total_laid_off and percentage_laid_off are NULL
 DELETE FROM layoff_staging2
 WHERE total_laid_off is null and percentage_laid_off is null; 
 
 select * from layoff_staging2;
 
+-- Dropping temporary row number column used for duplicate detection
 ALTER TABLE layoff_staging2 
 DROP COLUMN row_num;
