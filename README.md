@@ -97,6 +97,18 @@
 - 📈 Layoffs increased significantly during certain years.
 - 💰 Highly funded startups were also affected by layoffs.
 
+## 📸 Sample Query Outputs
+
+##### Sample SQL query outputs and analysis screenshots are available in the outputs/ folder.
+
+### Included Screenshots
+- 🏢 Top Companies with Highest Layoffs
+- 🏭 Industry-Wise Layoffs
+- 🌍 Country-Wise Layoffs
+- 📅 Yearly Layoff Trends
+- 🏆 Top 5 Companies by Year
+- 🚨 Companies with 100% Layoffs
+
 ## 📁 Project Structure
 <pre>
 world-layoffs-sql-analysis/
@@ -104,7 +116,14 @@ world-layoffs-sql-analysis/
 ├── data_cleaning.sql
 ├── exploratory_data_analysis.sql
 ├── layoffs.csv
-└── README.md </pre>
+├── README.md
+└── outputs/
+    ├── top_companies_layoffs.png
+    ├── industry_wise_layoffs.png
+    ├── country_wise_layoffs.png
+    ├── yearly_layoff_trends.png
+    ├── top_companies_per_year.png
+    └── complete_layoffs.png </pre>
 
 ## 🚀 How to Run the Project
 - Download the dataset
